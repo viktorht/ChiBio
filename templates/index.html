@@ -127,7 +127,7 @@
        <div style="line-height:25%;">
         <br>
       </div>
-      <button id="ODRegulate">Switch</button> <button id="Zigzag">Dither OD</button>
+      <button id="ODRegulate">Switch</button> <button id="Zigzag">ZigZag OD</button>
 
     
        <div id="ODContainer"  class="container">
@@ -229,7 +229,15 @@
   <br>
   
   
-  
+  <!-- ALE Button -->
+  <h3>ALE</h3>
+    <div style="line-height:25%;">
+        <br>
+      </div>
+  <button id="ALESwitch">Switch</button> <div> Rate: <br>
+              <input id="ALERate" type="number" size="8" value=0.05 style="width: 6em"/>
+      
+          </div>
   
   
   
@@ -1910,8 +1918,38 @@ function TitleFailure() {
         });
     </script>
     
+    <!-- ALE Functions are here.Modified from Stir Functions -->
+    <script>
+        $(function() {
+            $('#ALERate').click(function(){
+              var value = $('#ALERate').val();
+              var targetURL = '/SetOutputTarget/ALE/0/' + value;
+               $.ajax({
+                   type:'POST',
+                   url: targetURL,
+                   success:function(response){ 
+                   getSysData();
+                 }
+             }); 
+             })
+        });
+    </script>
     
-    
+      <script>
+        $(function() {
+            $('#ALESwitch').click(function(){
+               
+               var targetURL = '/SetOutputOn/ALE/2/0';
+               $.ajax({
+                   type:'POST',
+                   url: targetURL,
+                   success:function(response){ 
+                   getSysData();
+                 }
+             }); 
+             })
+        });
+    </script>
       
       
     
