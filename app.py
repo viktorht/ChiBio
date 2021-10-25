@@ -59,6 +59,8 @@ sysData = {'M0' : {
    'OD0' : {'target' : 0.0,'raw' : 0.0,'max' : 100000.0,'min': 0.0,'LASERb' : 1.833 ,'LASERa' : 0.226, 'LEDFa' : 0.673, 'LEDAa' : 7.0  },
    'Chemostat' : {'ON' : 0, 'p1' : 0.0, 'p2' : 0.1},
    'Zigzag': {'ON' : 0, 'Zig' : 0.04,'target' : 0.0,'SwitchPoint' : 0},
+   #Add ALE info here
+   'ALE':{'ON' :0, 'CurrentRatio': 0.0, 'CyclesSinceRatioSwitch':0, 'RatioIncrement':0.05, 'TargetGrowthRate':0.01}
    'GrowthRate': {'current' : 0.0,'record' : [],'default' : 2.0},
    'Volume' : {'target' : 20.0,'max' : 50.0, 'min' : 0.0,'ON' : 0},
    'Pump1' :  {'target' : 0.0,'default' : 0.0,'max': 1.0, 'min' : -1.0, 'direction' : 1.0, 'ON' : 0,'record' : [], 'thread' : 0},
@@ -318,6 +320,11 @@ def initialise(M):
     sysData[M]['Zigzag']['ON']=0
     sysData[M]['Zigzag']['target']=0.0
     sysData[M]['Zigzag']['SwitchPoint']=0
+    #Add ALE Button
+    sysData[M]['ALE']['ON']=0
+    sysData[M]['ALE']['CurrentRaio']=0.05
+    sysData[M]['ALE']['CyclesSinceRatioSwitch']=0
+    
     sysData[M]['GrowthRate']['current']=sysData[M]['GrowthRate']['default']
 
     sysDevices[M]['Thermostat']['threadCount']=0
@@ -1873,16 +1880,23 @@ def RegulateOD(M):
     global sysItems
     M=str(M)
     
-    if (sysData[M]['Zigzag']['ON']==1):
+    if(sysData[M]['ALE']['ON']==1):
+        TargetOD=sysData[M]['OD']['target']
+        ALE(M) #Function that calculates new target pump rates, and sets pumps to desired rates. 
+    
+    if (sysData[M]['Zigzag']['ON']==1 and sysData[M]['ALE']['ON']==0):
         TargetOD=sysData[M]['OD']['target']
         Zigzag(M) #Function that calculates new target pump rates, and sets pumps to desired rates. 
-
+    
+    
     
     Pump1Current=abs(sysData[M]['Pump1']['target'])
     Pump2Current=abs(sysData[M]['Pump2']['target'])
     Pump1Direction=sysData[M]['Pump1']['direction']
     Pump2Direction=sysData[M]['Pump2']['direction']
     
+    Pump3Current=abs(sysData[M]['Pump3']['target'])
+    Pump3Direction = sysData[M]['Pump3']['direction']
     
     
     ODNow=sysData[M]['OD']['current']
@@ -1897,8 +1911,10 @@ def RegulateOD(M):
 
     if sysData[M]['Experiment']['cycles']<3:
         Pump1=0 #In first few cycles we do precisely no pumping.
+        Pump3=0 #Add for Ale
     elif len(sysData[M]['time']['record']) < 2:
         Pump1=0 #In first few cycles we do precisely no pumping.
+        Pump3=0 #Add for Ale
         addTerminal(M, "Warning: Tried to calculate time elapsed with fewer than two " +\
     				"timepoints recorded. If you see this message a lot, there may be " +\
     				"a more serious problem.")
@@ -1943,13 +1959,23 @@ def RegulateOD(M):
         Pump1=0.02
     elif(Pump1<0):
         Pump1=0.0
-
+    
+    
+    
     if(sysData[M]['Chemostat']['ON']==1):
         Pump1=float(sysData[M]['Chemostat']['p1'])
-
+    
+    if(sysData[M]['ALE']['ON'] == 1):
+        #Takes the current ratio and applies it to 
+        #Pump 1 and Pump3 values
+        ratio = sysData[M]['ALE']['CurrentRatio']
+        Pump1 = Pump1 *(1-ratio)
+        Pump3 = Pump1 * ratio
+    
     #Set new Pump targets
     sysData[M]['Pump1']['target']=Pump1*Pump1Direction
     sysData[M]['Pump2']['target']=(Pump1*4+0.07)*Pump2Direction
+    sysData[M]['Pump3']['target']=Pump3*Pump3Direction
 
     if(sysData[M]['Experiment']['cycles']%5==1): #Every so often we do a big output pump to make sure tubes are clear.
         sysData[M]['Pump2']['target']=0.25*sysData[M]['Pump2']['direction']
@@ -1959,9 +1985,9 @@ def RegulateOD(M):
     
     if (sysData[M]['Experiment']['cycles']>15):
         #This section is to check if we have added any liquid recently, if not, then we dont run pump 2 since it won't be needed.
-        pastpumping=abs(sysData[M]['Pump1']['target'])
+        pastpumping=abs(sysData[M]['Pump1']['target'])+abs(sysData[M]['Pump3']['target'])
         for pv in range(-10,-1):
-            pastpumping=pastpumping+abs(sysData[M]['Pump1']['record'][pv])
+            pastpumping=pastpumping+abs(sysData[M]['Pump1']['record'][pv])+abs(sysData[M]['Pump3']['record'][pv])
         
         if pastpumping==0.0:
             sysData[M]['Pump2']['target']=0.0
@@ -1971,6 +1997,7 @@ def RegulateOD(M):
 
     SetOutputOn(M,'Pump1',1)
     SetOutputOn(M,'Pump2',1)
+    SetOutputOn(M,'Pump3', 1)
 
         
     if (sysData[M]['Zigzag']['ON']==1): #If the zigzag growth estimation is running then we change OD setpoint appropriately.
@@ -2016,7 +2043,71 @@ def Zigzag(M):
 
     return
 
+#ALE function (modified from zigzag above) 
+def ALE(M):
+    #this function will run in stead of the zigzag function 
+    #make sure the conditional is right in RegulateOD so that they don't interfere
+    global sysData
+    global sysItems
+    M=str(M)
+    
+    centre=sysData[M]['OD']['target']
+    current=sysData[M]['OD']['current']
+    #zig is a value hardcoded above, default to 0.04
+    zig=sysData[M]['Zigzag']['Zig']
+    iteration=sysData[M]['Experiment']['cycles']
+	
+    #Possibly modify to zig further. 
+    top = centre+zig
+    bottom = centre-zig
+    
+    try:
+        last=sysData[M]['OD']['record'][-1]
+    except: #This will happen if you activate Zigzag in first control iteration!
+        last=current
+    
+    
+    #This chunk checks if current OD is below the bottom of the zigzag
+    #and if the last OD recorded is below the centre then sets the target to 
+    # 5 (a super high OD)
+    #Otherwise if the target is already 5, then record the cycle number as
+    #the switchpoint. 
+    
+    if (current<bottom and last<centre):
+        if(sysData[M]['Zigzag']['target']!=5.0):
+            sysData[M]['Zigzag']['SwitchPoint']=iteration
+            #Add 1 to the cycles since Ratio switch, this is building on the switchpoint thing above
+            sysData[M]['ALE']['CyclesSinceRatioSwitch'] = sysData[M]['ALE']['CyclesSinceRatioSwitch'] + 1
+        sysData[M]['Zigzag']['target']=5.0 #an excessively high OD value.
+    
+    #Next chunk is if we get 2 ODs in a row above the top of the zigzag
+    #ie. centre + zig, or centre + 0.04
+    elif (current>top and last>top):
+        sysData[M]['Zigzag']['target']=centre-zig*1.5
+        sysData[M]['Zigzag']['SwitchPoint']=iteration
 
+        
+    sysData[M]['OD']['target']=sysData[M]['Zigzag']['target']
+	
+    #Subsequent section is for growth estimation.
+	
+    TimeSinceSwitch=iteration-sysData[M]['Zigzag']['SwitchPoint']
+    if (iteration>6 and TimeSinceSwitch>5 and current > 0 and last > 0): #The reason we wait a few minutes after starting growth is that new media may still be introduced, it takes a while for the growth to get going.
+        dGrowthRate=(math.log(current)-math.log(last))*60.0 #Converting to units of 1/hour
+        sysData[M]['GrowthRate']['current']=sysData[M]['GrowthRate']['current']*0.95 + dGrowthRate*0.05 #We are essentially implementing an online growth rate estimator with learning rate 0.05
+    
+    
+    #Code to check ratio switch
+    growthRate = sysData[M]['GrowthRate']['current']
+    targetGrowthRate = sysData[M]['ALE']['TargetGrowthRate']
+    n_cycles = sysData[M]['ALE']['CyclesSinceRatioSwitch']
+    if (n_cycles > 9 and growthRate > targetGrowthRate):
+        sysData[M]['ALE']['Ratio'] = sysData[M]['ALE']['Ratio'] + sysData[M]['ALE']['RatioIncrement']
+    
+    return
+
+    
+    
 
 @application.route("/ExperimentReset",methods=['POST'])
 def ExperimentReset():
