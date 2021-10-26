@@ -230,20 +230,32 @@
   
   
   <!-- ALE Button -->
-  <h3>ALE</h3>
-    <div style="line-height:25%;">
-        <br>
-      </div>
-  <button id="ALESwitch">Switch</button> <div> Ratio Increment: <br>
-              <input id="ALERate" type="number" size="8" value=0.05 style="width: 6em"/>
+<div id="StirContainer"  class="container" style="border:2px solid #000000">
+        <div class="row">
+            <div class="col-3 align-self-center">
+             <b><font color="000000"> Stirring</font></b>
+        
+          </div>
+          <div class="col-2 align-self-center">
+              Current: <br>
+              <div id="StirCurrent">0</div>
+            
+          </div>
+         
+          <div class="col-3 align-self-center">
+              New Rate: <br>
+              <input id="StirInput" type="number" size="8" value=0 style="width: 6em"/>
       
           </div>
-  
-  
-  
-  
-  
+          <div class="col-4 align-self-center">
+              <button id="StirSet">Set</button> <button id="StirSwitch" >Switch</button>
+        
+          </div>
       
+  
+  
+  
+  </div>   
   </div>    
   
   
