@@ -127,7 +127,7 @@
        <div style="line-height:25%;">
         <br>
       </div>
-      <button id="ODRegulate">Switch</button> <button id="Zigzag">ZigZag OD</button>
+      <button id="ODRegulate">Switch</button> <button id="Zigzag">Dither OD</button>
 
     
        <div id="ODContainer"  class="container">
@@ -225,37 +225,48 @@
       
       </div>
       </div>
+     <h3>ALE</h3>
+<div id="ALEContainer"  class="container">
+<button id="ALE">Switch</button> 
+  <div class="row">
+      <div class="col-3 align-self-center">
+       <b><font color="000000"> Target Growth Rate: </font></b> <br>
+       
+     
+    </div>
+    <div class="col-2 align-self-center">
+        Current: <br>
+        <div id="TargetCurrent">0</div>
       
+    </div>
+    <div class="col-2 align-self-center">
+     
+      
+    </div>
+     
+   
+    <div class="col-3 align-self-center">
+        New: <br>
+        <input id="TargetGrowthRate" type="number" size="8" value=0 style="width: 6em"/>
+
+    </div>
+    <div class="col-2 align-self-end">
+        <button id="VolumeSet">Set</button> 
+  
+    </div>
+
+</div>
+</div>
   <br>
   
   
-  <!-- ALE Button -->
-<div id="StirContainer"  class="container" style="border:2px solid #000000">
-        <div class="row">
-            <div class="col-3 align-self-center">
-             <b><font color="000000"> Stirring</font></b>
-        
-          </div>
-          <div class="col-2 align-self-center">
-              Current: <br>
-              <div id="StirCurrent">0</div>
-            
-          </div>
-         
-          <div class="col-3 align-self-center">
-              New Rate: <br>
-              <input id="StirInput" type="number" size="8" value=0 style="width: 6em"/>
+  
+  
+  
+  
+  
+  
       
-          </div>
-          <div class="col-4 align-self-center">
-              <button id="StirSet">Set</button> <button id="StirSwitch" >Switch</button>
-        
-          </div>
-      
-  
-  
-  
-  </div>   
   </div>    
   
   
@@ -1930,38 +1941,8 @@ function TitleFailure() {
         });
     </script>
     
-    <!-- ALE Functions are here.Modified from Stir Functions -->
-    <script>
-        $(function() {
-            $('#ALERate').click(function(){
-              var value = $('#ALERate').val();
-              var targetURL = '/SetOutputTarget/ALE/0/' + value;
-               $.ajax({
-                   type:'POST',
-                   url: targetURL,
-                   success:function(response){ 
-                   getSysData();
-                 }
-             }); 
-             })
-        });
-    </script>
     
-      <script>
-        $(function() {
-            $('#ALESwitch').click(function(){
-               
-               var targetURL = '/SetOutputOn/ALE/2/0';
-               $.ajax({
-                   type:'POST',
-                   url: targetURL,
-                   success:function(response){ 
-                   getSysData();
-                 }
-             }); 
-             })
-        });
-    </script>
+    
       
       
     
