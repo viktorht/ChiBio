@@ -60,7 +60,7 @@ sysData = {'M0' : {
    'Chemostat' : {'ON' : 0, 'p1' : 0.0, 'p2' : 0.1},
    'Zigzag': {'ON' : 0, 'Zig' : 0.04,'target' : 0.0,'SwitchPoint' : 0},
    #Add ALE info here
-   'ALE':{'CurrentRatio': 0.0, 'CyclesSinceRatioSwitch':0, 'RatioIncrement':0.05, 'target':0.01, 'ON' :0}
+   'ALE':{'CurrentRatio': 0.0, 'CyclesSinceRatioSwitch':0, 'RatioIncrement':0.05, 'target':0.0, 'ON' :0},
    'GrowthRate': {'current' : 0.0,'record' : [],'default' : 2.0},
    'Volume' : {'target' : 20.0,'max' : 50.0, 'min' : 0.0,'ON' : 0},
    'Pump1' :  {'target' : 0.0,'default' : 0.0,'max': 1.0, 'min' : -1.0, 'direction' : 1.0, 'ON' : 0,'record' : [], 'thread' : 0},
@@ -2098,10 +2098,14 @@ def ALE(M):
     
     
     #Code to check ratio switch
+    #If target growth rate is 0 then ratio will just increment every 10 cycles
     growthRate = sysData[M]['GrowthRate']['current']
+    prevGrowthRates = [sysData[M]['GrowthRate']['record'][-x] for x in range(1, 4)]
+    
     targetGrowthRate = sysData[M]['ALE']['TargetGrowthRate']
+    targetMet = all(gr > targetGrowthRate for gr in prevGrowthRates) and growthRate > targetGrowthRate
     n_cycles = sysData[M]['ALE']['CyclesSinceRatioSwitch']
-    if (n_cycles > 9 and growthRate > targetGrowthRate):
+    if (n_cycles > 9 and targetMet):
         sysData[M]['ALE']['Ratio'] = sysData[M]['ALE']['Ratio'] + sysData[M]['ALE']['RatioIncrement']
     
     return
