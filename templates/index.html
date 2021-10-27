@@ -227,7 +227,7 @@
       </div>
      <h3>ALE</h3>
 <div id="ALEContainer"  class="container">
-<button id="ALE">Switch</button> 
+<button id="ALESwitch">Switch</button> 
   <div class="row">
       <div class="col-3 align-self-center">
        <b><font color="000000"> Target Growth Rate: </font></b> <br>
@@ -247,11 +247,11 @@
    
     <div class="col-3 align-self-center">
         New: <br>
-        <input id="TargetGrowthRate" type="number" size="8" value=0 style="width: 6em"/>
+        <input id="ALEInput" type="number" size="8" value=0 style="width: 6em"/>
 
     </div>
     <div class="col-2 align-self-end">
-        <button id="VolumeSet">Set</button> 
+        <button id="ALESet">Set</button> 
   
     </div>
 
@@ -2285,8 +2285,39 @@ function TitleFailure() {
     
     
     
+    <!-- Set ALE Parameters  -->
     
+    <script>
+        $(function() {
+            $('#ALESet').click(function(){
+              var value = $('#ALEInput').val();
+              var targetURL = '/SetOutputTarget/ALE/0/' + value;
+               $.ajax({
+                   type:'POST',
+                   url: targetURL,
+                   success:function(response){ 
+                   getSysData();
+                 }
+             }); 
+             })
+        });
+    </script>
     
+      <script>
+        $(function() {
+            $('#ALESwitch').click(function(){
+               
+               var targetURL = '/SetOutputOn/ALE/2/0';
+               $.ajax({
+                   type:'POST',
+                   url: targetURL,
+                   success:function(response){ 
+                   getSysData();
+                 }
+             }); 
+             })
+        });
+    </script>
     
     <!-- Set Light Actuation Measurements  --> 
       <script>
