@@ -60,7 +60,7 @@ sysData = {'M0' : {
    'Chemostat' : {'ON' : 0, 'p1' : 0.0, 'p2' : 0.1},
    'Zigzag': {'ON' : 0, 'Zig' : 0.04,'target' : 0.0,'SwitchPoint' : 0},
    #Add ALE info here
-   'ALE':{'CurrentRatio': 0.0, 'CyclesSinceRatioSwitch':0, 'RatioIncrement':0.05, 'target':0.0, 'ON' :0},
+   'ALE':{'CurrentRatio': 0.0, 'record':[],'CyclesSinceRatioSwitch':0, 'RatioIncrement':0.05, 'target':0.0, 'ON' :0},
    'GrowthRate': {'current' : 0.0,'record' : [],'default' : 2.0},
    'Volume' : {'target' : 20.0,'max' : 50.0, 'min' : 0.0,'ON' : 0},
    'Pump1' :  {'target' : 0.0,'default' : 0.0,'max': 1.0, 'min' : -1.0, 'direction' : 1.0, 'ON' : 0,'record' : [], 'thread' : 0},
@@ -322,8 +322,9 @@ def initialise(M):
     sysData[M]['Zigzag']['SwitchPoint']=0
     #Add ALE Button
     sysData[M]['ALE']['ON']=0
-    sysData[M]['ALE']['CurrentRaio']=0.05
+    sysData[M]['ALE']['CurrentRaio']=0.0
     sysData[M]['ALE']['CyclesSinceRatioSwitch']=0
+    sysData[M]['ALE']['target'] = 0.0
     
     sysData[M]['GrowthRate']['current']=sysData[M]['GrowthRate']['default']
 
@@ -356,6 +357,8 @@ def initialise(M):
     sysData[M]['Thermostat']['record']=[]
 	
     sysData[M]['GrowthRate']['record']=[]
+    
+    sysData[M]['ALE']['record']=[]
 
     sysDevices[M]['ThermometerInternal']['device']=I2C.get_i2c_device(0x18,2) #Get Thermometer on Bus 2!!!
     sysDevices[M]['ThermometerExternal']['device']=I2C.get_i2c_device(0x1b,2) #Get Thermometer on Bus 2!!!
@@ -1851,6 +1854,7 @@ def downsample(M):
     sysData[M]['Pump4']['record']=downsampleFunc(sysData[M]['Pump4']['record'],index)
     sysData[M]['GrowthRate']['record']=downsampleFunc(sysData[M]['GrowthRate']['record'],index)
     
+    sysData[M]['ALE']['record'] = downsampleFunc(sysData[M]['ALE']['record'], index)
         
     for FP in ['FP1','FP2','FP3']:
         sysData[M][FP]['BaseRecord']=downsampleFunc(sysData[M][FP]['BaseRecord'],index)
@@ -2000,7 +2004,7 @@ def RegulateOD(M):
     SetOutputOn(M,'Pump3', 1)
 
         
-    if (sysData[M]['Zigzag']['ON']==1): #If the zigzag growth estimation is running then we change OD setpoint appropriately.
+    if (sysData[M]['Zigzag']['ON']==1 or sysData[M]["ALE"]['ON']==1): #If the zigzag or ALE growth estimation is running then we change OD setpoint appropriately.
         try:
             sysData[M]['OD']['target']=TargetOD
         except:
