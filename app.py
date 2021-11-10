@@ -2001,10 +2001,8 @@ def RegulateOD(M):
     #Run pump 3 first
     SetOutputOn(M,'Pump3',1)
     SetOutputOn(M,'Pump1',1)
-    #NB: This stir will run for all OD measures, not just ALE
-    prevStir = sysData[M]['Stir']['target']
-    #Sets a slow stir for 5 seconds
-    sysData[M]['Stir']['target'] = 0.1
+    #Stir here? 
+
     SetOutputOn(M, 'Stir', 1)
     
 
