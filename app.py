@@ -46,7 +46,8 @@ sysData = {'M0' : {
    'UV' : {'WL' : 'UV', 'default': 0.5, 'target' : 0.0, 'max': 1.0, 'min' : 0.0,'ON' : 0},
    'Heat' : {'default': 0.0, 'target' : 0.0, 'max': 1.0, 'min' : 0.0,'ON' : 0,'record' : []},
    'Thermostat' : {'default': 37.0, 'target' : 0.0, 'max': 50.0, 'min' : 0.0,'ON' : 0,'record' : [],'cycleTime' : 30.0, 'Integral' : 0.0,'last' : -1},
-   'Experiment' : {'indicator' : 'USR0', 'startTime' : 'Waiting', 'startTimeRaw' : 0, 'ON' : 0,'cycles' : 0, 'cycleTime' : 60.0,'threadCount' : 0},
+   #Experiment cycle time bumped up to 120 sec. Can increase further later. 
+   'Experiment' : {'indicator' : 'USR0', 'startTime' : 'Waiting', 'startTimeRaw' : 0, 'ON' : 0,'cycles' : 0, 'cycleTime' : 120.0,'threadCount' : 0},
    'Terminal' : {'text' : ''},
    'AS7341' : {
         'spectrum' : {'nm410' : 0, 'nm440' : 0, 'nm470' : 0, 'nm510' : 0, 'nm550' : 0, 'nm583' : 0, 'nm620' : 0, 'nm670' : 0,'CLEAR' : 0, 'NIR' : 0,'DARK' : 0,'ExtGPIO' : 0, 'ExtINT' : 0, 'FLICKER' : 0},
@@ -60,7 +61,7 @@ sysData = {'M0' : {
    'Chemostat' : {'ON' : 0, 'p1' : 0.0, 'p2' : 0.1},
    'Zigzag': {'ON' : 0, 'Zig' : 0.04,'target' : 0.0,'SwitchPoint' : 0},
    #Add ALE info here
-   'ALE':{'CurrentRatio': 0.0, 'record':[],'CyclesSinceRatioSwitch':0, 'RatioIncrement':0.05, 'target':0.0, 'ON' :0},
+   'ALE':{'CurrentRatio': 0.0, 'record':[],'CyclesSinceRatioSwitch':0, 'RatioIncrement':0.05, 'target':0.0, 'replacement':0.3, "SwitchPoint":0, 'ON' :0},
    'GrowthRate': {'current' : 0.0,'record' : [],'default' : 2.0},
    'Volume' : {'target' : 20.0,'max' : 50.0, 'min' : 0.0,'ON' : 0},
    'Pump1' :  {'target' : 0.0,'default' : 0.0,'max': 1.0, 'min' : -1.0, 'direction' : 1.0, 'ON' : 0,'record' : [], 'thread' : 0},
@@ -1783,7 +1784,7 @@ def csvData(M):
     row=row+[sysData[M]['Custom']['param3']*float(sysData[M]['Custom']['ON'])]
     row=row+[sysData[M]['Custom']['Status']*float(sysData[M]['Custom']['ON'])]
     row=row+[sysData[M]['Zigzag']['target']*float(sysData[M]['Zigzag']['ON'])]
-    row=row+[sysData[M]['GrowthRate']['current']*sysData[M]['Zigzag']['ON']]
+    row=row+[sysData[M]['GrowthRate']['current']*sysData[M]['ALE']['ON']]
     #Add ALE Ratio record
     row=row+[sysData[M]['ALE']['record'][-1]]
     
@@ -2001,16 +2002,10 @@ def RegulateOD(M):
     #Run pump 3 first
     SetOutputOn(M,'Pump3',1)
     SetOutputOn(M,'Pump1',1)
-    #Stir here? 
-
-    SetOutputOn(M, 'Stir', 1)
-    
-
-    
     SetOutputOn(M,'Pump2',1)
 
 
-        
+    #since we switch the OD Target during the ALE or ZigZag function we need to reset it to the actual here    
     if (sysData[M]['Zigzag']['ON']==1 or sysData[M]["ALE"]['ON']==1): #If the zigzag or ALE growth estimation is running then we change OD setpoint appropriately.
         try:
             sysData[M]['OD']['target']=TargetOD
@@ -2062,51 +2057,46 @@ def ALE(M):
     global sysItems
     M=str(M)
     
-    centre=sysData[M]['OD']['target']
+    top=sysData[M]['OD']['target']
     current=sysData[M]['OD']['current']
-    #zig is a value hardcoded above, default to 0.04
-    zig=sysData[M]['Zigzag']['Zig']
+    #Set the bottom to reflect the proportion replaced in each pumping cycle (default 0.3)
+    dilutionPercent = 1 - sysData[M]['ALE']['replacement']
+    bottom=top*dilutionPercent
+    
+    
+    
     iteration=sysData[M]['Experiment']['cycles']
 	
-    #Possibly modify to zig further. 
-    top = centre+zig
-    bottom = centre-zig
-    
     try:
         last=sysData[M]['OD']['record'][-1]
-    except: #This will happen if you activate Zigzag in first control iteration!
+    except: #This will happen if you activate ALE in first control iteration!
         last=current
     
     
     #This chunk checks if current OD is below the bottom of the zigzag
-    #and if the last OD recorded is below the centre then sets the target to 
+    #and if the last OD recorded is below the bottom + 5% then sets the target to 
     # 5 (a super high OD)
-    #Otherwise if the target is already 5, then record the cycle number as
-    #the switchpoint. 
+    #Otherwise if the target is already 5, then add 1 to the cycles since ratio switch. 
     
-    if (current<bottom and last<centre):
-        if(sysData[M]['Zigzag']['target']!=5.0):
-            sysData[M]['Zigzag']['SwitchPoint']=iteration
+    if (current<bottom and last<bottom +(bottom*0.05)):
+        if(sysData[M]['ALE']['target']!=5.0):
             #Add 1 to the cycles since Ratio switch, this is building on the switchpoint thing above
             sysData[M]['ALE']['CyclesSinceRatioSwitch'] = sysData[M]['ALE']['CyclesSinceRatioSwitch'] + 1
-        sysData[M]['Zigzag']['target']=5.0 #an excessively high OD value.
+            sysData[M]['ALE']['SwitchPoint']=iteration
+        sysData[M]['ALE']['target']=5.0 #an excessively high OD value.
     
     #Next chunk is if we get 2 ODs in a row above the top of the zigzag
-    #ie. centre + zig, or centre + 0.04
     elif (current>top and last>top):
-        sysData[M]['Zigzag']['target']=centre-zig*1.5
-        sysData[M]['Zigzag']['SwitchPoint']=iteration
+        sysData[M]['ALE']['target']=bottom
+        sysData[M]['ALE']['SwitchPoint']=iteration
 
         
-    sysData[M]['OD']['target']=sysData[M]['Zigzag']['target']
-	
-    #Subsequent section is for growth estimation.
+    sysData[M]['OD']['target']=sysData[M]['ALE']['target']
 	
     TimeSinceSwitch=iteration-sysData[M]['Zigzag']['SwitchPoint']
     if (iteration>6 and TimeSinceSwitch>5 and current > 0 and last > 0): #The reason we wait a few minutes after starting growth is that new media may still be introduced, it takes a while for the growth to get going.
         dGrowthRate=(math.log(current)-math.log(last))*60.0 #Converting to units of 1/hour
         sysData[M]['GrowthRate']['current']=sysData[M]['GrowthRate']['current']*0.95 + dGrowthRate*0.05 #We are essentially implementing an online growth rate estimator with learning rate 0.05
-    
     
     #Code to check ratio switch
     #If target growth rate is 0 then ratio will just increment every 10 cycles
@@ -2118,6 +2108,7 @@ def ALE(M):
     n_cycles = sysData[M]['ALE']['CyclesSinceRatioSwitch']
     if (n_cycles > 9 and targetMet):
         sysData[M]['ALE']['Ratio'] = sysData[M]['ALE']['Ratio'] + sysData[M]['ALE']['RatioIncrement']
+        sysData[M]['ALE']['CyclesSinceRatioSwitch'] = 0
     
     return
 
