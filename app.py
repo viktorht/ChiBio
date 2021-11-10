@@ -1967,7 +1967,6 @@ def RegulateOD(M):
         Pump1=0.0
     
     
-    
     if(sysData[M]['Chemostat']['ON']==1):
         Pump1=float(sysData[M]['Chemostat']['p1'])
     
@@ -1999,11 +1998,14 @@ def RegulateOD(M):
             sysData[M]['Pump2']['target']=0.0
             sysData[M]['Pump1']['target']=0.0 #This should be equal to 0 anyway.
         
-        
-
+    #Run pump 3 first
+    SetOutputOn(M,'Pump3',1)
     SetOutputOn(M,'Pump1',1)
+    #Something here to do some mixing after addition?
+   
+    
     SetOutputOn(M,'Pump2',1)
-    SetOutputOn(M,'Pump3', 1)
+
 
         
     if (sysData[M]['Zigzag']['ON']==1 or sysData[M]["ALE"]['ON']==1): #If the zigzag or ALE growth estimation is running then we change OD setpoint appropriately.
