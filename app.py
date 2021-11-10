@@ -1749,7 +1749,7 @@ def csvData(M):
                   'LED_500nm_setpoint','LED_523nm_setpoint','LED_595nm_setpoint','LED_623nm_setpoint',
                   'LED_6500K_setpoint','laser_setpoint','LED_UV_int','FP1_base','FP1_emit1','FP1_emit2','FP2_base',
                   'FP2_emit1','FP2_emit2','FP3_base','FP3_emit1','FP3_emit2','custom_prog_param1','custom_prog_param2',
-                  'custom_prog_param3','custom_prog_status','zigzag_target','growth_rate', 'ALE_Ratio"]
+                  'custom_prog_param3','custom_prog_status','zigzag_target','growth_rate', 'ALE_Ratio']
 
     row=[sysData[M]['time']['record'][-1],
         sysData[M]['OD']['record'][-1],
@@ -1785,7 +1785,7 @@ def csvData(M):
     row=row+[sysData[M]['Zigzag']['target']*float(sysData[M]['Zigzag']['ON'])]
     row=row+[sysData[M]['GrowthRate']['current']*sysData[M]['Zigzag']['ON']]
     #Add ALE Ratio record
-    row=row+[sysData[M]['ALE']['record'][-1]
+    row=row+[sysData[M]['ALE']['record'][-1]]
     
    
 	#Following can be uncommented if you are recording ALL spectra for e.g. biofilm experiments
@@ -2001,8 +2001,13 @@ def RegulateOD(M):
     #Run pump 3 first
     SetOutputOn(M,'Pump3',1)
     SetOutputOn(M,'Pump1',1)
-    #Something here to do some mixing after addition?
-   
+    #NB: This stir will run for all OD measures, not just ALE
+    prevStir = sysData[M]['Stir']['target']
+    #Sets a slow stir for 5 seconds
+    sysData[M]['Stir']['target'] = 0.1
+    SetOutputOn(M, 'Stir', 1)
+    
+
     
     SetOutputOn(M,'Pump2',1)
 
@@ -2268,6 +2273,7 @@ def runExperiment(M,placeholder):
     sysData[M]['Pump3']['record'].append(sysData[M]['Pump3']['target']*float(sysData[M]['Pump3']['ON']))
     sysData[M]['Pump4']['record'].append(sysData[M]['Pump4']['target']*float(sysData[M]['Pump4']['ON']))
     sysData[M]['GrowthRate']['record'].append(sysData[M]['GrowthRate']['current']*float(sysData[M]['Zigzag']['ON']))
+    sysData[M]['ALE']['record'].append(sysData[M]['ALE']['CurrentRaio']*float(sysData[M]['ALE']['ON']))
     for FP in ['FP1','FP2','FP3']:
         if sysData[M][FP]['ON']==1:
             sysData[M][FP]['BaseRecord'].append(sysData[M][FP]['Base'])
