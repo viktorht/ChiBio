@@ -667,9 +667,15 @@ def SetOutput(M,item):
     elif (item=='OD'):
         SetOutputOn(M,'Pump1',0)
         SetOutputOn(M,'Pump2',0) #We turn pumps off when we switch OD state
+    
     elif (item=='Zigzag'):
         sysData[M]['Zigzag']['target']=5.0
         sysData[M]['Zigzag']['SwitchPoint']=sysData[M]['Experiment']['cycles']
+    
+    
+    elif (item=='ALE'):
+        sysData[M]['ALE']['target'] = 5.0
+        
     
     elif (item=='LEDA' or item=='LEDB' or item=='LEDC' or item=='LEDD' or item=='LEDE' or item=='LEDF' or item=='LEDG'):
         setPWM(M,'PWM',sysItems[item],sysData[M][item]['target']*float(sysData[M][item]['ON']),0)
@@ -1749,7 +1755,7 @@ def csvData(M):
                   'LED_500nm_setpoint','LED_523nm_setpoint','LED_595nm_setpoint','LED_623nm_setpoint',
                   'LED_6500K_setpoint','laser_setpoint','LED_UV_int','FP1_base','FP1_emit1','FP1_emit2','FP2_base',
                   'FP2_emit1','FP2_emit2','FP3_base','FP3_emit1','FP3_emit2','custom_prog_param1','custom_prog_param2',
-                  'custom_prog_param3','custom_prog_status','zigzag_target','growth_rate', 'ALE_Ratio']
+                  'custom_prog_param3','custom_prog_status','zigzag_target','growth_rate', 'ALE_Ratio', 'ALE_On']
 
     row=[sysData[M]['time']['record'][-1],
         sysData[M]['OD']['record'][-1],
@@ -1786,6 +1792,7 @@ def csvData(M):
     row=row+[sysData[M]['GrowthRate']['current']*sysData[M]['Zigzag']['ON']]
     #Add ALE Ratio record
     row=row+[sysData[M]['ALE']['record'][-1]]
+    row = row + [sysData[M]['ALE']['ON']]
     
    
 	#Following can be uncommented if you are recording ALL spectra for e.g. biofilm experiments
@@ -1978,9 +1985,9 @@ def RegulateOD(M):
         Pump3 = Pump1 * ratio
     
     #Set new Pump targets
-    sysData[M]['Pump1']['target']=Pump1*Pump1Direction
-    sysData[M]['Pump2']['target']=(Pump1*4+0.07)*Pump2Direction
-    sysData[M]['Pump3']['target']=Pump3*Pump3Direction
+        sysData[M]['Pump1']['target']=Pump1*Pump1Direction
+        sysData[M]['Pump2']['target']=(Pump1*4+0.07)*Pump2Direction
+        sysData[M]['Pump3']['target']=Pump3*Pump3Direction
 
     if(sysData[M]['Experiment']['cycles']%5==1): #Every so often we do a big output pump to make sure tubes are clear.
         sysData[M]['Pump2']['target']=0.25*sysData[M]['Pump2']['direction']
