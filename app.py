@@ -60,7 +60,7 @@ sysData = {'M0' : {
    'Chemostat' : {'ON' : 0, 'p1' : 0.0, 'p2' : 0.1},
    'Zigzag': {'ON' : 0, 'Zig' : 0.04,'target' : 0.0,'SwitchPoint' : 0},
    #Add ALE info here
-   'ALE':{'CurrentRatio': 0.0, 'record':[],'CyclesSinceRatioSwitch':0, 'RatioIncrement':0.05, 'target':0.0, 'ON' :0},
+   'ALE':{'CurrentRatio': 0.05, 'record':[],'CyclesSinceRatioSwitch':0, 'RatioIncrement':0.05, 'target':0.0, 'ON' :0},
    'GrowthRate': {'current' : 0.0,'record' : [],'default' : 2.0},
    'Volume' : {'target' : 20.0,'max' : 50.0, 'min' : 0.0,'ON' : 0},
    'Pump1' :  {'target' : 0.0,'default' : 0.0,'max': 1.0, 'min' : -1.0, 'direction' : 1.0, 'ON' : 0,'record' : [], 'thread' : 0},
@@ -1983,12 +1983,15 @@ def RegulateOD(M):
         ratio = sysData[M]['ALE']['CurrentRatio']
         Pump1 = Pump1 *(1-ratio)
         Pump3 = Pump1 * ratio
+    else:
+        #Need to assign a pump3 value since we're using it now. 
+        Pump3 = 0
+    #Set new Pump targets if ALE is running
+    sysData[M]['Pump1']['target']=Pump1*Pump1Direction
+    sysData[M]['Pump2']['target']=(Pump1*4+0.07)*Pump2Direction
+    sysData[M]['Pump3']['target']=Pump3*Pump3Direction
     
-    #Set new Pump targets
-        sysData[M]['Pump1']['target']=Pump1*Pump1Direction
-        sysData[M]['Pump2']['target']=(Pump1*4+0.07)*Pump2Direction
-        sysData[M]['Pump3']['target']=Pump3*Pump3Direction
-
+    
     if(sysData[M]['Experiment']['cycles']%5==1): #Every so often we do a big output pump to make sure tubes are clear.
         sysData[M]['Pump2']['target']=0.25*sysData[M]['Pump2']['direction']
     
@@ -2007,13 +2010,7 @@ def RegulateOD(M):
         
     #Run pump 3 first
     SetOutputOn(M,'Pump3',1)
-    SetOutputOn(M,'Pump1',1)
-    #Stir here? 
-
-    SetOutputOn(M, 'Stir', 1)
-    
-
-    
+    SetOutputOn(M,'Pump1',1)  
     SetOutputOn(M,'Pump2',1)
 
 
