@@ -2119,7 +2119,7 @@ def ALE(M):
         prevGrowthRates = [sysData[M]['GrowthRate']['record'][-x] for x in range(1, 4)]
     except:
         prevGrowthRates = [0]*4
-    targetGrowthRate = sysData[M]['ALE']['TargetGrowthRate']
+    targetGrowthRate = sysData[M]['ALE']['target']
     targetMet = all(gr > targetGrowthRate for gr in prevGrowthRates) and growthRate > targetGrowthRate
     n_cycles = sysData[M]['ALE']['CyclesSinceRatioSwitch']
     if (n_cycles > 9 and targetMet):
