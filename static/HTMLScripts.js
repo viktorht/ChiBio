@@ -474,7 +474,7 @@ function updateData(data){
         
         //ALE Code
         if(data.ALE.ON==1){
-            document.getElementById("ALE").setAttribute("style", "border-style:inset;background-color:lightblue")
+            document.getElementById("ALESwitch").setAttribute("style", "border-style:inset;background-color:lightblue")
         }    
                
        // Following if statement is for things that should be done only when changing betwix devices.
