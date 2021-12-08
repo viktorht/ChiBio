@@ -2122,8 +2122,13 @@ def ALE(M):
     targetGrowthRate = sysData[M]['ALE']['target']
     targetMet = all(gr > targetGrowthRate for gr in prevGrowthRates) and growthRate > targetGrowthRate
     n_cycles = sysData[M]['ALE']['CyclesSinceRatioSwitch']
-    if (n_cycles > 9 and targetMet):
-        sysData[M]['ALE']['Ratio'] = sysData[M]['ALE']['Ratio'] + sysData[M]['ALE']['RatioIncrement']
+    if (n_cycles > 2):
+        newRatio = sysData[M]['ALE']['CurrentRatio'] + sysData[M]['ALE']['RatioIncrement']
+        if newRatio < 1:
+            sysData[M]['ALE']['CurrentRatio'] = newRatio
+        else:
+            sysData[M]['ALE']['CurrentRatio'] = 1
+            
     
     return
 
