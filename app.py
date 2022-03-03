@@ -1788,8 +1788,12 @@ def csvData(M):
     row=row+[sysData[M]['Custom']['param2']*float(sysData[M]['Custom']['ON'])]
     row=row+[sysData[M]['Custom']['param3']*float(sysData[M]['Custom']['ON'])]
     row=row+[sysData[M]['Custom']['Status']*float(sysData[M]['Custom']['ON'])]
-    row=row+[sysData[M]['Zigzag']['target']*float(sysData[M]['Zigzag']['ON'])]
-    row=row+[sysData[M]['GrowthRate']['current']*sysData[M]['Zigzag']['ON']]
+    
+    if sysData[M]['Zigzag']['ON'] + [sysData[M]['ALE']['ON'] > 0:
+        zzOrAle = float(1)
+    
+    row=row+[sysData[M]['Zigzag']['target']*zzOrAle]
+    row=row+[sysData[M]['GrowthRate']['current']*zzOrAle]
     #Add ALE Ratio record
     row=row+[sysData[M]['ALE']['record'][-1]]
     row = row + [sysData[M]['ALE']['ON']]
