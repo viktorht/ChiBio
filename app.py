@@ -1791,6 +1791,8 @@ def csvData(M):
     
     if sysData[M]['Zigzag']['ON'] + [sysData[M]['ALE']['ON'] > 0:
         zzOrAle = float(1)
+    else:
+        zzOrAle = float(0)
     
     row=row+[sysData[M]['Zigzag']['target']*zzOrAle]
     row=row+[sysData[M]['GrowthRate']['current']*zzOrAle]
@@ -2285,7 +2287,11 @@ def runExperiment(M,placeholder):
     sysData[M]['Pump2']['record'].append(sysData[M]['Pump2']['target']*float(sysData[M]['Pump2']['ON']))
     sysData[M]['Pump3']['record'].append(sysData[M]['Pump3']['target']*float(sysData[M]['Pump3']['ON']))
     sysData[M]['Pump4']['record'].append(sysData[M]['Pump4']['target']*float(sysData[M]['Pump4']['ON']))
-    sysData[M]['GrowthRate']['record'].append(sysData[M]['GrowthRate']['current']*float(sysData[M]['Zigzag']['ON']))
+    if sysData[M]['Zigzag']['ON'] + [sysData[M]['ALE']['ON'] > 0:
+        zzOrAle = float(1)
+    else:
+        zzOrAle = float(0)
+    sysData[M]['GrowthRate']['record'].append(sysData[M]['GrowthRate']['current']*zzOrAle))
     sysData[M]['ALE']['record'].append(sysData[M]['ALE']['CurrentRaio']*float(sysData[M]['ALE']['ON']))
     for FP in ['FP1','FP2','FP3']:
         if sysData[M][FP]['ON']==1:
