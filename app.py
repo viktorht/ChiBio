@@ -2128,12 +2128,14 @@ def ALE(M):
     targetGrowthRate = sysData[M]['ALE']['target']
     targetMet = all(gr > targetGrowthRate for gr in prevGrowthRates) and growthRate > targetGrowthRate
     n_cycles = sysData[M]['ALE']['CyclesSinceRatioSwitch']
+    
     if (n_cycles > 10):
         newRatio = sysData[M]['ALE']['CurrentRatio'] + sysData[M]['ALE']['RatioIncrement']
         if newRatio < 1:
             sysData[M]['ALE']['CurrentRatio'] = newRatio
         else:
             sysData[M]['ALE']['CurrentRatio'] = 1
+        sysData[M]['ALE']['CyclesSinceRatioSwitch'] = 0
             
     
     return
@@ -2287,10 +2289,12 @@ def runExperiment(M,placeholder):
     sysData[M]['Pump2']['record'].append(sysData[M]['Pump2']['target']*float(sysData[M]['Pump2']['ON']))
     sysData[M]['Pump3']['record'].append(sysData[M]['Pump3']['target']*float(sysData[M]['Pump3']['ON']))
     sysData[M]['Pump4']['record'].append(sysData[M]['Pump4']['target']*float(sysData[M]['Pump4']['ON']))
+    
     if sysData[M]['Zigzag']['ON'] + [sysData[M]['ALE']['ON'] > 0:
         zzOrAle = float(1)
     else:
         zzOrAle = float(0)
+    
     sysData[M]['GrowthRate']['record'].append(sysData[M]['GrowthRate']['current']*zzOrAle))
     sysData[M]['ALE']['record'].append(sysData[M]['ALE']['CurrentRaio']*float(sysData[M]['ALE']['ON']))
     for FP in ['FP1','FP2','FP3']:
