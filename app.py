@@ -2085,8 +2085,7 @@ def ALE(M):
     try:
         last=sysData[M]['OD']['record'][-1]
     except: #This will happen if you activate Zigzag in first control iteration!
-        last=current
-    
+        last=current    
     
     #This chunk checks if current OD is below the bottom of the zigzag
     #and if the last OD recorded is below the centre then sets the target to 
@@ -2296,7 +2295,7 @@ def runExperiment(M,placeholder):
         zzOrAle = float(0)
     
     sysData[M]['GrowthRate']['record'].append(sysData[M]['GrowthRate']['current']*zzOrAle)
-    sysData[M]['ALE']['record'].append(sysData[M]['ALE']['CurrentRaio']*float(sysData[M]['ALE']['ON']))
+    sysData[M]['ALE']['record'].append(sysData[M]['ALE']['CurrentRatio']*float(sysData[M]['ALE']['ON']))
     for FP in ['FP1','FP2','FP3']:
         if sysData[M][FP]['ON']==1:
             sysData[M][FP]['BaseRecord'].append(sysData[M][FP]['Base'])
