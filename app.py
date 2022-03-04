@@ -2074,7 +2074,9 @@ def ALE(M):
 	
     #Possibly modify to zig further. 
     top = centre+zig
-    bottom = centre-zig
+
+    bottom = centre-centre*0.3
+
     
     try:
         last=sysData[M]['OD']['record'][-1]
@@ -2122,7 +2124,10 @@ def ALE(M):
     targetGrowthRate = sysData[M]['ALE']['target']
     targetMet = all(gr > targetGrowthRate for gr in prevGrowthRates) and growthRate > targetGrowthRate
     n_cycles = sysData[M]['ALE']['CyclesSinceRatioSwitch']
-    if (n_cycles > 2):
+
+    
+    if (n_cycles > 10):
+
         newRatio = sysData[M]['ALE']['CurrentRatio'] + sysData[M]['ALE']['RatioIncrement']
         if newRatio < 1:
             sysData[M]['ALE']['CurrentRatio'] = newRatio
