@@ -322,7 +322,7 @@ def initialise(M):
     sysData[M]['Zigzag']['SwitchPoint']=0
     #Add ALE Button
     sysData[M]['ALE']['ON']=0
-    sysData[M]['ALE']['CurrentRaio']=0.0
+    sysData[M]['ALE']['CurrentRatio']=0.0
     sysData[M]['ALE']['CyclesSinceRatioSwitch']=0
     sysData[M]['ALE']['target'] = 0.0
     
