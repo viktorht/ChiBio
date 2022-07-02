@@ -1233,6 +1233,37 @@ def CustomProgram(M):
             SetOutputOn(M,'UV',1) #Activate UV
             time.sleep(Dose) #Wait for dose to be administered
             SetOutputOn(M,'UV',0) #Deactivate UV
+
+    elif (program == "pump_calibration"):
+        # This custom program is use to calibrate the pumps, that is find the relation between target-value and flow rate
+        
+        target_values = np.arange(start = 0.00001, stop = 1, step = 5) # generate test target values
+        target_values_shuffled = np.random.shuffle(target_values) # good experimental practise to shuffle order of experiments
+
+        item = 'pump1'
+        for t in target_values_shuffled:
+            SetOutputTarget(M, item, t) # changes the target value in sysData
+            SetOutputOn(M, item, 1)  # changes the ON value in sysData to ON
+            sysDevices[M][item]['thread']=Thread(target = PumpModulation, args=(M,item)) # reads the sysData file
+            sysDevices[M][item]['thread'].setDaemon(True)
+            sysDevices[M][item]['thread'].start()
+
+            print(M,f'Program = {program}, pumping at {item} with target: {t} for 60 sec.')
+            time.sleep(60) # This is done independent of the experimental cycles, because I currently don't understand them
+            
+            print(M,f'Pumping completed.')
+
+            while True:
+                proceed = input("Have you noted the weight and are ready for the next run (y/n): ")
+                if proceed == 'n':
+                    break
+                if proceed == 'y':
+                    False
+
+            
+
+
+
                 
                 
     
