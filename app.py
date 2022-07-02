@@ -730,17 +730,18 @@ def PumpModulation(M,item):
     Time1=datetime.now()
     cycletime=sysData[M]['Experiment']['cycleTime']*1.05 #We make this marginally longer than the experiment cycle time to avoid too much chaos when you come back around to pumping again.
     
+
     Ontime=cycletime*abs(sysData[M][item]['target'])
     
     # Decided to remove the below section in order to prevent media buildup in the device if you are pumping in very rapidly. This check means that media is removed, then added. Removing this code means these happen simultaneously.
     #if (item=="Pump1" and abs(sysData[M][item]['target'])<0.3): #Ensuring we run Pump1 after Pump2.
     #    waittime=cycletime*abs(sysData[M]['Pump2']['target']) #We want to wait until the output pump has stopped, otherwise you are very inefficient with your media since it will be pumping out the fresh media fromthe top of the test tube right when it enters.
     #    time.sleep(waittime+1.0)  
-        
-    
+
+    # Viktors commets: I think that this code just turns on the pump at max speed 
     if (sysData[M][item]['target']>0 and currentThread==sysDevices[M][item]['threadCount']): #Turning on pumps in forward direction
         sysDevices[M][item]['active']=1
-        setPWM(M,'Pumps',sysItems[item]['In1'],1.0*float(sysData[M][item]['ON']),0)
+        setPWM(M,'Pumps',sysItems[item]['In1'],1.0*float(sysData[M][item]['ON']),0) # Viktors commets: here it is turned on
         setPWM(M,'Pumps',sysItems[item]['In2'],0.0*float(sysData[M][item]['ON']),0)
         sysDevices[M][item]['active']=0
     elif (sysData[M][item]['target']<0 and currentThread==sysDevices[M][item]['threadCount']): #Or backward direction.
@@ -748,9 +749,11 @@ def PumpModulation(M,item):
         setPWM(M,'Pumps',sysItems[item]['In1'],0.0*float(sysData[M][item]['ON']),0)
         setPWM(M,'Pumps',sysItems[item]['In2'],1.0*float(sysData[M][item]['ON']),0)
         sysDevices[M][item]['active']=0
-  
+    
+    # Viktors comment: I think this means that it basically just turn on the pump at full power for certain duration (Ontime). Which is determined by target * cycleTime
     time.sleep(Ontime)
     
+    # Viktor comment: After the Ontime the pumps are turned off and it waits until the cycle is over (see a few lines below) 
     if(abs(sysData[M][item]['target'])!=1 and currentThread==sysDevices[M][item]['threadCount']): #Turning off pumps at appropriate time.
         sysDevices[M][item]['active']=1
         setPWM(M,'Pumps',sysItems[item]['In1'],0.0*float(sysData[M][item]['ON']),0)
@@ -763,7 +766,7 @@ def PumpModulation(M,item):
     elapsedTime=Time2-Time1
     elapsedTimeSeconds=round(elapsedTime.total_seconds(),2)
     Offtime=cycletime-elapsedTimeSeconds
-    if (Offtime>0.0):
+    if (Offtime>0.0): 
         time.sleep(Offtime)   
     
     
