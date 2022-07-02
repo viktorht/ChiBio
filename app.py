@@ -593,6 +593,7 @@ def SetOutputTarget(M,item, value):
 @application.route("/SetOutputOn/<item>/<force>/<M>",methods=['POST'])
 def SetOutputOn(M,item,force):
     #General function used to switch an output on or off.
+    # Viktors commnent: This function mutates the sysData variables 'ON' parameter, which is then "read" by the SetOutput function.
     global sysData
     item = str(item)
     
@@ -625,6 +626,8 @@ def SetOutputOn(M,item,force):
 
 def SetOutput(M,item):
     #Here we actually do the digital communications required to set a given output. This function is called by SetOutputOn above as required.
+    # Viktors comment: This functions just reads the sysData variable, thus to change anything the sysData variable has to be modified and then read by this function to implement the modification.
+    # Viktors comment: The SetOutputOn() and SetOutputTarget() functions are functions which modifies the sysData variable.
     global sysData
     global sysItems
     global sysDevices
