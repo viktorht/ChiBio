@@ -18,6 +18,7 @@ import simplejson
 import copy
 import csv
 import smbus2 as smbus
+from prompt_user import query_yes_no
 
 
 application = Flask(__name__)
@@ -1248,17 +1249,19 @@ def CustomProgram(M):
             sysDevices[M][item]['thread'].setDaemon(True)
             sysDevices[M][item]['thread'].start()
 
-            print(M,f'Program = {program}, pumping at {item} with target: {t} for 60 sec.')
-            time.sleep(60) # This is done independent of the experimental cycles, because I currently don't understand them
+            print(M,f'Program = {program}, pumping at {item} with target: {t} for {sysData[M]['Experiment']['cycleTime']} sec.')
+            time.sleep(sysData[M]['Experiment']['cycleTime']) # Sleep until the cycle is done, this may run into sync issue because the pumping cycle time is a bit shorter 
+            # I think it would be better to wait until a new cycle is triggered 
+            SetOutputOn(M, item, 0)  # changes the ON value in sysData to OFF, next time the pumpModulation comes araound and read the sysData it will switch the pump off
             
-            print(M,f'Pumping completed.')
 
-            while True:
-                proceed = input("Have you noted the weight and are ready for the next run (y/n): ")
-                if proceed == 'n':
-                    break
-                if proceed == 'y':
-                    False
+            # Implement some tracking of the experiment time track when a new cycle is initiated
+
+            print(M,f'Pumping completed.')
+            
+            proceed = query_yes_no(question="Have you noted the weight and are ready to proceed to the next pumping cycle [y/stop]? (stop will stop the experiment)")
+            if not proceed:
+                break
 
             
 
